@@ -77,9 +77,16 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     )
 
+    // Set the token as an httpOnly cookie instead of sending it in JSON
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false, // set to true once you're on HTTPS in production
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days, matches the JWT expiry
+    })
+
     res.json({
       message: 'Login successful',
-      token,
       user: {
         id: user.id,
         name: user.name,
@@ -91,6 +98,12 @@ router.post('/login', async (req, res) => {
     console.error(error)
     res.status(500).json({ message: 'Server error' })
   }
+})
+
+// LOGOUT
+router.post('/logout', (req, res) => {
+  res.clearCookie('token')
+  res.json({ message: 'Logged out successfully' })
 })
 
 export default router
