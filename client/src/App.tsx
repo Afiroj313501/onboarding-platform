@@ -1,19 +1,21 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import Tasks from './pages/Tasks'
+import Documents from './pages/Documents'
+import Feedback from './pages/Feedback'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
-import Tasks from './pages/Tasks'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/tasks" element={<Tasks />} />
 
         <Route
           element={
@@ -23,9 +25,9 @@ function App() {
           }
         >
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/tasks" element={<div className="text-2xl">My Tasks Coming Soon</div>} />
-          <Route path="/documents" element={<div className="text-2xl">Documents Coming Soon</div>} />
-          <Route path="/feedback" element={<div className="text-2xl">Feedback Coming Soon</div>} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/feedback" element={<Feedback />} />
         </Route>
       </Routes>
     </BrowserRouter>
