@@ -1,18 +1,23 @@
-import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import Modal from '../components/Modal'
+import Login from './Login'
+import Register from './Register'
 
 const roles = [
   {
     name: 'Employee',
     description: 'Track your onboarding tasks, access company documents, and share feedback as you settle in.',
+    image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&h=300&fit=crop&q=80',
   },
   {
     name: 'Manager',
     description: "See your team's onboarding progress, approve completed tasks, and read feedback from new hires.",
+    image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=300&fit=crop&q=80',
   },
   {
     name: 'HR Admin',
     description: 'Manage employee records, build onboarding plans, upload documents, and track company-wide progress.',
+    image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=300&fit=crop&q=80',
   },
 ]
 
@@ -43,6 +48,7 @@ const checklistItems = [
 
 function Landing() {
   const [loaded, setLoaded] = useState(false)
+  const [activeModal, setActiveModal] = useState<'login' | 'register' | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setLoaded(true), 50)
@@ -52,33 +58,32 @@ function Landing() {
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
       {/* Top bar */}
-      <header className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-8 py-5 flex items-center justify-between">
           <span className="text-lg font-semibold text-ink tracking-tight">
             Onboarding
           </span>
           <div className="flex items-center gap-3">
-            <Link
-              to="/login"
+            <button
+              onClick={() => setActiveModal('login')}
               className="text-sm font-medium text-body hover:text-ink transition-colors"
             >
               Log in
-            </Link>
-            <Link
-              to="/register"
+            </button>
+            <button
+              onClick={() => setActiveModal('register')}
               className="text-sm font-medium bg-brand hover:bg-brand-hover text-white px-4 py-2 rounded-md transition-all hover:shadow-md hover:-translate-y-0.5"
             >
               Get started
-            </Link>
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative">
-        {/* Soft radial glow, positioned behind hero content only */}
+      {/* Hero with photo */}
+      <section className="relative overflow-hidden">
         <div
-          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-40 pointer-events-none"
+          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-30 pointer-events-none"
           style={{
             background: 'radial-gradient(circle, #bbf7d0 0%, transparent 70%)',
             filter: 'blur(60px)',
@@ -86,7 +91,7 @@ function Landing() {
           }}
         />
 
-        <div className="relative max-w-5xl mx-auto px-8 pt-24 pb-20 grid grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+        <div className="relative max-w-5xl mx-auto px-8 pt-20 pb-0 grid grid-cols-[1fr_1fr] gap-12 items-center">
           {/* Left: text */}
           <div
             className={`transition-all duration-700 ease-out ${
@@ -105,73 +110,70 @@ function Landing() {
               first day that actually works.
             </p>
             <div className="flex items-center gap-3 mt-8">
-              <Link
-                to="/register"
+              <button
+                onClick={() => setActiveModal('register')}
                 className="bg-brand hover:bg-brand-hover text-white text-sm font-medium px-5 py-3 rounded-md transition-all hover:shadow-lg hover:-translate-y-0.5"
               >
                 Create an account
-              </Link>
-              <Link
-                to="/login"
+              </button>
+              <button
+                onClick={() => setActiveModal('login')}
                 className="border border-border hover:border-brand-border hover:bg-surface text-ink text-sm font-medium px-5 py-3 rounded-md transition-colors"
               >
                 I already have one
-              </Link>
+              </button>
             </div>
           </div>
 
-          {/* Right: animated checklist card */}
+          {/* Right: photo with floating checklist card */}
           <div
-            className={`transition-all duration-700 delay-150 ease-out ${
+            className={`relative transition-all duration-700 delay-150 ease-out ${
               loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
             }`}
           >
-            <div className="bg-surface border border-border rounded-xl shadow-lg p-6 relative">
-              <div className="flex items-center justify-between mb-5">
-                <p className="text-sm font-medium text-ink">Your onboarding</p>
-                <span className="text-xs px-2 py-1 rounded-full bg-brand-tint text-brand border border-brand-border font-medium">
-                  2 of 4 done
+            <div className="rounded-xl overflow-hidden border border-border shadow-lg">
+              <img
+                src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&h=600&fit=crop&q=80"
+                alt="Team collaborating in a modern office"
+                className="w-full h-80 object-cover"
+              />
+            </div>
+
+            {/* Floating checklist card, overlapping the photo */}
+            <div className="absolute -bottom-8 -left-8 w-64 bg-surface border border-border rounded-xl shadow-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-medium text-ink">Your onboarding</p>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-brand-tint text-brand border border-brand-border font-medium">
+                  2/4
                 </span>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {checklistItems.map((item, i) => (
                   <div
                     key={item.label}
-                    className={`flex items-center gap-3 transition-all duration-500 ease-out ${
+                    className={`flex items-center gap-2.5 transition-all duration-500 ease-out ${
                       loaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
                     }`}
-                    style={{ transitionDelay: `${300 + i * 100}ms` }}
+                    style={{ transitionDelay: `${400 + i * 100}ms` }}
                   >
                     <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        item.done
-                          ? 'bg-brand border-brand'
-                          : 'border-border'
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        item.done ? 'bg-brand border-brand' : 'border-border'
                       }`}
                     >
                       {item.done && (
-                        <svg
-                          className="w-3 h-3 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={3}
-                        >
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
-                    <span
-                      className={`text-sm ${
-                        item.done ? 'text-muted line-through' : 'text-ink'
-                      }`}
-                    >
+                    <span className={`text-xs ${item.done ? 'text-muted line-through' : 'text-ink'}`}>
                       {item.label}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="mt-5 h-1.5 bg-bg rounded-full overflow-hidden">
+              <div className="mt-4 h-1.5 bg-bg rounded-full overflow-hidden">
                 <div
                   className="h-full bg-brand rounded-full transition-all duration-1000 ease-out"
                   style={{ width: loaded ? '50%' : '0%' }}
@@ -180,25 +182,37 @@ function Landing() {
             </div>
           </div>
         </div>
+
+        {/* Spacer to account for floating card overlap */}
+        <div className="h-16" />
       </section>
 
-      {/* Role cards */}
-      <section className="max-w-5xl mx-auto px-8 pb-20">
+      {/* Role cards with photos */}
+      <section className="max-w-5xl mx-auto px-8 pb-20 pt-8">
         <div className="grid grid-cols-3 gap-4">
           {roles.map((role, i) => (
             <div
               key={role.name}
-              className={`group bg-surface border border-border border-l-[3px] border-l-brand rounded-lg p-6 transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1 hover:border-l-brand-hover cursor-default ${
+              className={`group bg-surface border border-border rounded-lg overflow-hidden transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1 ${
                 loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
               style={{ transitionDelay: loaded ? `${i * 100}ms` : '0ms' }}
             >
-              <h3 className="font-semibold text-ink group-hover:text-brand transition-colors">
-                {role.name}
-              </h3>
-              <p className="text-body text-sm mt-2 leading-relaxed">
-                {role.description}
-              </p>
+              <div className="h-36 overflow-hidden">
+                <img
+                  src={role.image}
+                  alt={role.name}
+                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                />
+              </div>
+              <div className="border-l-[3px] border-l-brand p-6">
+                <h3 className="font-semibold text-ink group-hover:text-brand transition-colors">
+                  {role.name}
+                </h3>
+                <p className="text-body text-sm mt-2 leading-relaxed">
+                  {role.description}
+                </p>
+              </div>
             </div>
           ))}
         </div>
@@ -228,29 +242,49 @@ function Landing() {
         </div>
       </section>
 
-      {/* CTA footer */}
+      {/* CTA footer with background photo */}
       <section className="relative overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&h=500&fit=crop&q=80"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-10"
+        />
         <div
-          className="absolute inset-0 opacity-30 pointer-events-none"
+          className="absolute inset-0 opacity-60 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at center, #f0fdf4 0%, transparent 70%)',
+            background: 'linear-gradient(180deg, var(--color-bg) 0%, transparent 20%, transparent 80%, var(--color-bg) 100%)',
           }}
         />
-        <div className="relative max-w-5xl mx-auto px-8 py-20 text-center">
+        <div className="relative max-w-5xl mx-auto px-8 py-24 text-center">
           <h2 className="text-2xl font-semibold text-ink">
             Ready to set up your team?
           </h2>
           <p className="text-muted text-sm mt-2">
             Takes a couple of minutes to create your first account.
           </p>
-          <Link
-            to="/register"
+          <button
+            onClick={() => setActiveModal('register')}
             className="inline-block mt-6 bg-brand hover:bg-brand-hover text-white text-sm font-medium px-6 py-3 rounded-md transition-all hover:shadow-lg hover:-translate-y-0.5"
           >
             Get started
-          </Link>
+          </button>
         </div>
       </section>
+
+      {/* Auth modals */}
+      <Modal isOpen={activeModal === 'login'} onClose={() => setActiveModal(null)}>
+        <Login
+          onSuccess={() => setActiveModal(null)}
+          onSwitchToRegister={() => setActiveModal('register')}
+        />
+      </Modal>
+
+      <Modal isOpen={activeModal === 'register'} onClose={() => setActiveModal(null)}>
+        <Register
+          onSuccess={() => setActiveModal(null)}
+          onSwitchToLogin={() => setActiveModal('login')}
+        />
+      </Modal>
     </div>
   )
 }
