@@ -6,6 +6,7 @@ const navItems = [
   { to: '/tasks', label: 'My Tasks' },
   { to: '/documents', label: 'Documents' },
   { to: '/feedback', label: 'Feedback' },
+  { to: '/manage-employees', label: 'Manage Employees' },
 ]
 
 function Layout() {

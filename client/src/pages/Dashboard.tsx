@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '../lib/api'
+import ProgressRing from '../components/ProgressRing'
+import StatusBreakdown from '../components/StatusBreakdown'
 
 interface Profile {
   message: string
@@ -9,23 +11,44 @@ interface Profile {
   }
 }
 
+interface Task {
+  id: string
+  status: string
+}
+
+interface TasksResponse {
+  tasks: Task[]
+}
+
 function Dashboard() {
-  const { data, isLoading, isError } = useQuery<Profile>({
+  const { data: profileData, isLoading: profileLoading, isError: profileError } = useQuery<Profile>({
     queryKey: ['profile'],
     queryFn: () => api.get('/profile').then((res) => res.data),
   })
 
-  if (isLoading) {
+  const { data: tasksData, isLoading: tasksLoading } = useQuery<TasksResponse>({
+    queryKey: ['tasks'],
+    queryFn: () => api.get('/tasks').then((res) => res.data),
+    retry: false, // don't retry on 404 (no employee record yet)
+  })
+
+  if (profileLoading) {
     return <p className="text-muted text-sm">Loading your dashboard...</p>
   }
 
-  if (isError) {
+  if (profileError) {
     return (
       <p className="text-danger text-sm">
         Couldn't load your profile. Try logging in again.
       </p>
     )
   }
+
+  const tasks = tasksData?.tasks ?? []
+  const completed = tasks.filter((t) => t.status === 'completed').length
+  const inProgress = tasks.filter((t) => t.status === 'in_progress').length
+  const pending = tasks.filter((t) => t.status === 'pending').length
+  const completionPct = tasks.length > 0 ? (completed / tasks.length) * 100 : 0
 
   return (
     <div>
@@ -36,13 +59,13 @@ function Dashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-surface border border-border rounded-lg p-5">
           <p className="text-xs uppercase tracking-wide text-muted font-medium">
             Role
           </p>
           <p className="text-lg font-semibold text-ink mt-1 capitalize">
-            {data?.user.role.replace('_', ' ').toLowerCase()}
+            {profileData?.user.role.replace('_', ' ').toLowerCase()}
           </p>
         </div>
 
@@ -51,19 +74,33 @@ function Dashboard() {
             User ID
           </p>
           <p className="text-sm font-medium text-ink mt-1 truncate">
-            {data?.user.userId}
+            {profileData?.user.userId}
           </p>
         </div>
       </div>
 
-      <div className="bg-brand-tint border border-brand-border rounded-lg p-5">
-        <p className="text-sm text-brand font-medium">
-          Onboarding progress tracking is coming soon.
-        </p>
-        <p className="text-sm text-body mt-1">
-          Once tasks are assigned, you'll see your completion status here.
-        </p>
-      </div>
+      {tasksLoading ? (
+        <div className="bg-surface border border-border rounded-lg p-8 flex justify-center">
+          <p className="text-muted text-sm">Loading task progress...</p>
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="bg-brand-tint border border-brand-border rounded-lg p-5">
+          <p className="text-sm text-brand font-medium">
+            No tasks assigned yet.
+          </p>
+          <p className="text-sm text-body mt-1">
+            Once your onboarding plan is set up, your progress will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <p className="text-sm font-medium text-ink mb-5">Onboarding progress</p>
+          <div className="grid grid-cols-[auto_1fr] gap-8 items-center">
+            <ProgressRing percentage={completionPct} label="Complete" />
+            <StatusBreakdown completed={completed} inProgress={inProgress} pending={pending} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -8,6 +8,7 @@ import Documents from './pages/Documents'
 import Feedback from './pages/Feedback'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
+import ManageEmployees from './pages/ManageEmployees'
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/feedback" element={<Feedback />} />
+          <Route path="/manage-employees" element={<ManageEmployees />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
 import { authMiddleware } from "./middleware/auth.middleware";
 import taskRoutes from "./routes/task.routes";
+import employeeRoutes from "./routes/employee.routes";
+
 
 dotenv.config();
 
@@ -21,6 +23,8 @@ app.use(cookieParser());
 // Public routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
+// ... after app.use("/api/feedback", feedbackRoutes);
+app.use("/api/employees", employeeRoutes);
 
 // Protected test route
 app.get("/api/profile", authMiddleware, (req: any, res) => {
