@@ -2,11 +2,15 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import path from "path";
 import authRoutes from "./routes/auth.routes";
 import { authMiddleware } from "./middleware/auth.middleware";
 import taskRoutes from "./routes/task.routes";
 import employeeRoutes from "./routes/employee.routes";
-
+import managerRoutes from "./routes/manager.routes";
+import documentRoutes from "./routes/document.routes";
+import documentUploadRoutes from "./routes/documentUpload.routes";
+import feedbackRoutes from "./routes/feedback.routes";
 
 dotenv.config();
 
@@ -20,11 +24,17 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Public routes
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
-// ... after app.use("/api/feedback", feedbackRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/manager", managerRoutes);
+app.use("/api/documents", documentRoutes);
+app.use("/api/documents", documentUploadRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // Protected test route
 app.get("/api/profile", authMiddleware, (req: any, res) => {
