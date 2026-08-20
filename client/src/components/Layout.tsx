@@ -1,16 +1,39 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import api from '../lib/api'
 
-const navItems = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/tasks', label: 'My Tasks' },
-  { to: '/documents', label: 'Documents' },
-  { to: '/feedback', label: 'Feedback' },
-  { to: '/manage-employees', label: 'Manage Employees' },
+interface Profile {
+  user: {
+    userId: string
+    role: string
+  }
+}
+
+const navConfig = [
+  { to: '/dashboard', label: 'Dashboard', roles: ['EMPLOYEE', 'MANAGER', 'HR_ADMIN'] },
+  { to: '/tasks', label: 'My Tasks', roles: ['EMPLOYEE', 'MANAGER', 'HR_ADMIN'] },
+  { to: '/documents', label: 'Documents', roles: ['EMPLOYEE', 'MANAGER', 'HR_ADMIN'] },
+  { to: '/feedback', label: 'Feedback', roles: ['EMPLOYEE', 'MANAGER', 'HR_ADMIN'] },
+  { to: '/team-progress', label: 'Team Progress', roles: ['MANAGER', 'HR_ADMIN'] },
+  { to: '/approve-tasks', label: 'Approve Tasks', roles: ['MANAGER', 'HR_ADMIN'] },
+  { to: '/team-feedback', label: 'Team Feedback', roles: ['MANAGER', 'HR_ADMIN'] },
+  { to: '/manage-employees', label: 'Manage Employees', roles: ['HR_ADMIN'] },
+  { to: '/upload-documents', label: 'Upload Documents', roles: ['HR_ADMIN'] },
 ]
 
 function Layout() {
   const navigate = useNavigate()
+
+  const { data } = useQuery<Profile>({
+    queryKey: ['profile'],
+    queryFn: () => api.get('/profile').then((res) => res.data),
+  })
+
+  const role = data?.user.role
+
+  const visibleNavItems = navConfig.filter(
+    (item) => !role || item.roles.includes(role)
+  )
 
   const handleLogout = async () => {
     try {
@@ -30,11 +53,13 @@ function Layout() {
           <h1 className="text-lg font-semibold text-ink tracking-tight">
             Onboarding
           </h1>
-          <p className="text-xs text-muted mt-0.5">Employee Portal</p>
+          <p className="text-xs text-muted mt-0.5">
+            {role ? role.replace('_', ' ').toLowerCase() : 'Employee Portal'}
+          </p>
         </div>
 
         <nav className="flex-1 px-3 py-6 space-y-1">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

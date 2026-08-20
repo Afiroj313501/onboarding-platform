@@ -9,6 +9,10 @@ import Feedback from './pages/Feedback'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import ManageEmployees from './pages/ManageEmployees'
+import TeamProgress from './pages/TeamProgress'
+import ApproveTasks from './pages/ApproveTasks'
+import TeamFeedback from './pages/TeamFeedback'
+import UploadDocuments from './pages/UploadDocuments'
 
 function App() {
   return (
@@ -30,6 +34,10 @@ function App() {
           <Route path="/documents" element={<Documents />} />
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/manage-employees" element={<ManageEmployees />} />
+          <Route path="/team-progress" element={<TeamProgress />} />
+          <Route path="/approve-tasks" element={<ApproveTasks />} />
+          <Route path="/team-feedback" element={<TeamFeedback />} />
+          <Route path="/upload-documents" element={<UploadDocuments />} />
         </Route>
       </Routes>
     </BrowserRouter>
