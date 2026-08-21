@@ -13,6 +13,7 @@ import TeamProgress from './pages/TeamProgress'
 import ApproveTasks from './pages/ApproveTasks'
 import TeamFeedback from './pages/TeamFeedback'
 import UploadDocuments from './pages/UploadDocuments'
+import CreateOnboardingPlan from './pages/CreateOnboardingPlan'
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="/approve-tasks" element={<ApproveTasks />} />
           <Route path="/team-feedback" element={<TeamFeedback />} />
           <Route path="/upload-documents" element={<UploadDocuments />} />
+          <Route path="/onboarding-plans" element={<CreateOnboardingPlan />} />
         </Route>
       </Routes>
     </BrowserRouter>

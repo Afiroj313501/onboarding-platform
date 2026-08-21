@@ -2,24 +2,23 @@
 
 @theme {
   /* Color tokens */
-  --color-ink: #0f172a;         /* headings, primary text */
-  --color-body: #475569;        /* secondary/body text */
-  --color-muted: #64748b;       /* tertiary text, labels */
-  --color-border: #e2e8f0;      /* hairline borders */
-  --color-bg: #fafaf9;          /* page background */
-  --color-surface: #ffffff;     /* card background */
+  --color-ink: #0f172a;
+  --color-body: #475569;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-bg: #fafaf9;
+  --color-surface: #ffffff;
 
-  --color-brand: #166534;       /* primary green — buttons, active states */
-  --color-brand-hover: #15803d; /* hover green */
-  --color-brand-tint: #f0fdf4;  /* pale green — active nav bg, highlights */
-  --color-brand-border: #bbf7d0;/* border for green-tinted elements */
+  --color-brand: #166534;
+  --color-brand-hover: #15803d;
+  --color-brand-tint: #f0fdf4;
+  --color-brand-border: #bbf7d0;
 
   --color-danger: #dc2626;
   --color-danger-tint: #fef2f2;
   --color-warning: #ca8a04;
   --color-warning-tint: #fefce8;
 
-  /* Font */
   --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -37,6 +36,115 @@ h1, h2, h3, h4 {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+
+/* ============================================
+   RICHER CARD STYLING — applies globally to every
+   card using the standard bg-surface + border-border
+   + rounded-lg combo, no JSX changes needed
+   ============================================ */
+
+.bg-surface.border-border {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: box-shadow 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.bg-surface.border-border:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.04);
+}
+
+/* Give rounded-lg cards a touch more visual depth */
+.rounded-lg.bg-surface {
+  background-image: linear-gradient(180deg, #ffffff 0%, #fdfdfc 100%);
+}
+
+/* ============================================
+   BUTTON POLISH — richer brand buttons everywhere
+   ============================================ */
+
+.bg-brand {
+  box-shadow: 0 1px 2px rgba(22, 101, 52, 0.15);
+  transition: box-shadow 0.2s ease-out, transform 0.15s ease-out, background-color 0.2s ease-out;
+}
+
+.bg-brand:hover:not(:disabled) {
+  box-shadow: 0 4px 10px rgba(22, 101, 52, 0.25);
+  transform: translateY(-1px);
+}
+
+.bg-brand:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ============================================
+   BADGES / PILLS — subtle depth on status chips
+   ============================================ */
+
+.rounded-full.border {
+  box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03);
+}
+
+/* ============================================
+   INPUTS — nicer focus states
+   ============================================ */
+
+input, textarea, select {
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+/* ============================================
+   SIDEBAR NAV — smoother active/hover transitions
+   ============================================ */
+
+nav a, nav button {
+  transition: background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out;
+}
+
+/* ============================================
+   PROGRESS BARS & RINGS — smoother, richer fills
+   ============================================ */
+
+.bg-brand.rounded-full {
+  background-image: linear-gradient(90deg, #15803d 0%, #166534 100%);
+}
+
+/* ============================================
+   SCROLLBAR — subtle branded scrollbar
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* ============================================
+   SUBTLE PAGE ENTRANCE — every route fades in
+   ============================================ */
+
+#root {
+  animation: pageFade 0.3s ease-out;
+}
+
+@keyframes pageFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================
+   MODAL ANIMATIONS (already in use by Modal.tsx)
+   ============================================ */
 
 @keyframes fadeIn {
   from { opacity: 0; }

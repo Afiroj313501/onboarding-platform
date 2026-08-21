@@ -100,4 +100,35 @@ router.post('/', authMiddleware, requireHrAdmin, async (req: any, res) => {
   }
 })
 
+router.post('/:employeeId/tasks', authMiddleware, requireHrAdmin, async (req: any, res) => {
+  try {
+    const { employeeId } = req.params
+    const { tasks } = req.body
+
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      return res.status(400).json({ message: 'At least one task is required' })
+    }
+
+    const employee = await prisma.employee.findUnique({ where: { id: employeeId } })
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' })
+    }
+
+    const created = await prisma.task.createMany({
+      data: tasks.map((t: any) => ({
+        title: t.title,
+        description: t.description || null,
+        priority: t.priority || 'medium',
+        dueDate: t.dueDate ? new Date(t.dueDate) : null,
+        employeeId,
+      })),
+    })
+
+    res.status(201).json({ message: `${created.count} tasks created` })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
 export default router

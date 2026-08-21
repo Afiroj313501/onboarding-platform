@@ -55,16 +55,32 @@ model Employee {
 }
 
 model Task {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  status      String   @default("pending") // pending, in_progress, completed
-  priority    String   @default("medium")  // low, medium, high
-  dueDate     DateTime?
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(uuid())
+  title            String
+  description      String?
+  status           String   @default("pending")
+  priority         String   @default("medium")
+  progress         Int      @default(0)
+  approved         Boolean  @default(false)
+  needsRevision    Boolean  @default(false)
+  revisionNote     String?
+  dueDate          DateTime?
+  requestedDueDate DateTime?
+  extensionReason  String?
+  extensionStatus  String   @default("none")
+  employeeId       String
+  employee         Employee @relation(fields: [employeeId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  comments         TaskComment[]
+}
+model TaskComment {
+  id        String   @id @default(uuid())
+  content   String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model Document {
