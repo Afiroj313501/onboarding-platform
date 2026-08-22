@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import api from '../lib/api'
 
 interface Doc {
@@ -10,6 +11,72 @@ interface Doc {
 
 interface DocumentsResponse {
   documents: Doc[]
+}
+
+function DocumentCard({ doc }: { doc: Doc }) {
+  const [summary, setSummary] = useState<string | null>(null)
+
+  const summarize = useMutation({
+    mutationFn: () => api.post(`/ai/summarize-document/${doc.id}`).then((res) => res.data),
+    onSuccess: (data) => setSummary(data.summary),
+  })
+
+  const isPdf = doc.fileUrl.toLowerCase().endsWith('.pdf')
+
+  return (
+    <div className="bg-surface border border-border rounded-lg overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 hover:bg-brand-tint/40 transition-colors group">
+        <a
+          href={`http://localhost:5000${doc.fileUrl}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 min-w-0"
+        >
+          <h3 className="font-medium text-ink group-hover:text-brand">
+            {doc.title}
+          </h3>
+          <p className="text-muted text-xs mt-0.5">
+            Added {new Date(doc.createdAt).toLocaleDateString()}
+          </p>
+        </a>
+
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {isPdf && (
+            <button
+              onClick={() => summarize.mutate()}
+              disabled={summarize.isPending}
+              className="text-xs font-medium text-brand hover:underline disabled:opacity-50"
+            >
+              {summarize.isPending ? 'Summarizing...' : summary ? 'Re-summarize' : 'AI summary'}
+            </button>
+          )}
+          <a
+            href={`http://localhost:5000${doc.fileUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted group-hover:text-brand font-medium"
+          >
+            View
+          </a>
+        </div>
+      </div>
+
+      {summary && (
+        <div className="border-t border-border bg-brand-tint/30 px-5 py-4">
+          <p className="text-xs font-medium text-brand mb-2">AI Summary</p>
+          <div className="text-sm text-body whitespace-pre-line">{summary}</div>
+        </div>
+      )}
+
+      {summarize.isError && (
+        <div className="border-t border-border bg-danger-tint px-5 py-3">
+          <p className="text-xs text-danger">
+            {(summarize.error as any)?.response?.data?.message || 'Failed to summarize.'}
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function Documents() {
@@ -24,18 +91,9 @@ function Documents() {
 
   if (isError) {
     return (
-      <div>
-        <h2 className="text-2xl font-semibold text-ink mb-6">Documents</h2>
-        <div className="bg-danger-tint border border-danger/20 rounded-lg p-5">
-          <p className="text-sm text-danger font-medium">
-            Couldn't load documents
-          </p>
-          <p className="text-sm text-body mt-1">
-            {(error as any)?.response?.data?.message ||
-              'Something went wrong. Please try again.'}
-          </p>
-        </div>
-      </div>
+      <p className="text-danger text-sm">
+        Failed to load documents: {(error as any)?.response?.data?.message || 'Unknown error'}
+      </p>
     )
   }
 
@@ -64,25 +122,7 @@ function Documents() {
 
       <div className="space-y-2">
         {data.documents.map((doc) => (
-          <a
-            key={doc.id}
-            href={doc.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between bg-surface border border-border rounded-lg px-5 py-4 hover:border-brand-border hover:bg-brand-tint/40 transition-colors group"
-          >
-            <div>
-              <h3 className="font-medium text-ink group-hover:text-brand">
-                {doc.title}
-              </h3>
-              <p className="text-muted text-xs mt-0.5">
-                Added {new Date(doc.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-            <span className="text-xs text-muted group-hover:text-brand font-medium">
-              View →
-            </span>
-          </a>
+          <DocumentCard key={doc.id} doc={doc} />
         ))}
       </div>
     </div>
