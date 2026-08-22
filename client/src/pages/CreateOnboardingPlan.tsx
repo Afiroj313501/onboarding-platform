@@ -21,11 +21,34 @@ const emptyTask = (): TaskDraft => ({ title: '', description: '', priority: 'med
 function CreateOnboardingPlan() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('')
   const [tasks, setTasks] = useState<TaskDraft[]>([emptyTask()])
+  const [aiRole, setAiRole] = useState('')
+  const [aiDepartment, setAiDepartment] = useState('')
+  const [aiNotes, setAiNotes] = useState('')
+  const [showAiForm, setShowAiForm] = useState(false)
   const queryClient = useQueryClient()
 
   const { data: employeesData, isLoading: employeesLoading } = useQuery<{ employees: Employee[] }>({
     queryKey: ['employees'],
     queryFn: () => api.get('/employees').then((res) => res.data),
+  })
+
+  const generateTasks = useMutation({
+    mutationFn: () =>
+      api.post('/ai/generate-tasks', {
+        role: aiRole,
+        department: aiDepartment,
+        notes: aiNotes,
+      }),
+    onSuccess: (res) => {
+      const generated = res.data.tasks.map((t: any) => ({
+        title: t.title || '',
+        description: t.description || '',
+        priority: t.priority || 'medium',
+        dueDate: '',
+      }))
+      setTasks(generated)
+      setShowAiForm(false)
+    },
   })
 
   const createTasks = useMutation({
@@ -64,12 +87,67 @@ function CreateOnboardingPlan() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-ink">Create onboarding plan</h2>
-        <p className="text-muted text-sm mt-1">
-          Assign a set of onboarding tasks to an employee.
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold text-ink">Create onboarding plan</h2>
+          <p className="text-muted text-sm mt-1">
+            Assign a set of onboarding tasks to an employee.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAiForm((v) => !v)}
+          className="flex items-center gap-2 border border-brand-border bg-brand-tint hover:bg-brand-border/30 text-brand text-sm font-medium px-4 py-2.5 rounded-md transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+          Generate with AI
+        </button>
       </div>
+
+      {/* AI generation panel */}
+      {showAiForm && (
+        <div className="bg-brand-tint border border-brand-border rounded-lg p-5 mb-6">
+          <h3 className="text-sm font-medium text-ink mb-4">Generate tasks with AI</h3>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <input
+              type="text"
+              value={aiRole}
+              onChange={(e) => setAiRole(e.target.value)}
+              placeholder="Role, e.g. Software Engineer"
+              className="border border-border rounded-md p-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-border bg-surface"
+            />
+            <input
+              type="text"
+              value={aiDepartment}
+              onChange={(e) => setAiDepartment(e.target.value)}
+              placeholder="Department (optional)"
+              className="border border-border rounded-md p-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-border bg-surface"
+            />
+          </div>
+          <textarea
+            value={aiNotes}
+            onChange={(e) => setAiNotes(e.target.value)}
+            rows={2}
+            placeholder="Any extra context (optional) — e.g. remote team, requires NDA, uses specific tools..."
+            className="w-full border border-border rounded-md p-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand-border resize-none bg-surface mb-3"
+          />
+          <button
+            type="button"
+            onClick={() => aiRole.trim() && generateTasks.mutate()}
+            disabled={!aiRole.trim() || generateTasks.isPending}
+            className="bg-brand hover:bg-brand-hover text-white text-sm font-medium px-5 py-2.5 rounded-md transition-colors disabled:opacity-50"
+          >
+            {generateTasks.isPending ? 'Generating...' : 'Generate tasks'}
+          </button>
+          {generateTasks.isError && (
+            <p className="text-danger text-sm mt-3">
+              {(generateTasks.error as any)?.response?.data?.message || 'Failed to generate tasks.'}
+            </p>
+          )}
+        </div>
+      )}
 
       <form
         onSubmit={handleSubmit}

@@ -11,6 +11,8 @@ import managerRoutes from "./routes/manager.routes";
 import documentRoutes from "./routes/document.routes";
 import documentUploadRoutes from "./routes/documentUpload.routes";
 import feedbackRoutes from "./routes/feedback.routes";
+import chatRoutes from "./routes/chat.routes";
+import aiRoutes from "./routes/ai.routes";
 
 dotenv.config();
 
@@ -35,6 +37,8 @@ app.use("/api/manager", managerRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/documents", documentUploadRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Protected test route
 app.get("/api/profile", authMiddleware, (req: any, res) => {
