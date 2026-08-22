@@ -131,4 +131,88 @@ router.post('/:employeeId/tasks', authMiddleware, requireHrAdmin, async (req: an
   }
 })
 
+// GET /api/employees/analytics - company-wide stats for HR Admin
+router.get('/analytics', authMiddleware, requireHrAdmin, async (req: any, res) => {
+  try {
+    const hrUser = await prisma.user.findUnique({ where: { id: req.user.userId } })
+
+    if (!hrUser?.companyId) {
+      return res.status(400).json({ message: 'You are not linked to a company yet' })
+    }
+
+    const employees = await prisma.employee.findMany({
+      where: { companyId: hrUser.companyId },
+      include: { tasks: true },
+    })
+
+    const totalEmployees = employees.length
+    const allTasks = employees.flatMap((e) => e.tasks)
+    const totalTasks = allTasks.length
+    const completedTasks = allTasks.filter((t) => t.status === 'completed').length
+    const inProgressTasks = allTasks.filter((t) => t.status === 'in_progress').length
+    const pendingTasks = allTasks.filter((t) => t.status === 'pending').length
+    const pendingExtensions = allTasks.filter((t) => t.extensionStatus === 'pending').length
+    const pendingApprovals = allTasks.filter(
+      (t) => t.progress === 100 && !t.approved && !t.needsRevision
+    ).length
+
+    const avgCompletionPct =
+      totalEmployees > 0
+        ? Math.round(
+            employees.reduce((sum, e) => {
+              const empAvg =
+                e.tasks.length > 0
+                  ? e.tasks.reduce((s, t) => s + t.progress, 0) / e.tasks.length
+                  : 0
+              return sum + empAvg
+            }, 0) / totalEmployees
+          )
+        : 0
+
+    // Department breakdown
+    const deptMap: Record<string, { count: number; totalProgress: number; taskCount: number }> = {}
+    employees.forEach((e) => {
+      const dept = e.department || 'Unassigned'
+      if (!deptMap[dept]) deptMap[dept] = { count: 0, totalProgress: 0, taskCount: 0 }
+      deptMap[dept].count += 1
+      e.tasks.forEach((t) => {
+        deptMap[dept].totalProgress += t.progress
+        deptMap[dept].taskCount += 1
+      })
+    })
+
+    const departmentBreakdown = Object.entries(deptMap).map(([name, d]) => ({
+      department: name,
+      employeeCount: d.count,
+      avgProgress: d.taskCount > 0 ? Math.round(d.totalProgress / d.taskCount) : 0,
+    }))
+
+    const feedbackCount = await prisma.feedback.count({
+      where: { user: { companyId: hrUser.companyId } },
+    })
+
+    const avgRatingResult = await prisma.feedback.aggregate({
+      where: { user: { companyId: hrUser.companyId }, rating: { not: null } },
+      _avg: { rating: true },
+    })
+
+    res.json({
+      totalEmployees,
+      totalTasks,
+      completedTasks,
+      inProgressTasks,
+      pendingTasks,
+      pendingExtensions,
+      pendingApprovals,
+      avgCompletionPct,
+      departmentBreakdown,
+      feedbackCount,
+      avgRating: avgRatingResult._avg.rating ? Math.round(avgRatingResult._avg.rating * 10) / 10 : null,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
 export default router

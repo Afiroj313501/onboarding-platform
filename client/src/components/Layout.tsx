@@ -20,6 +20,7 @@ const navConfig = [
   { to: '/manage-employees', label: 'Manage Employees', roles: ['HR_ADMIN'] },
   { to: '/upload-documents', label: 'Upload Documents', roles: ['HR_ADMIN'] },
   { to: '/onboarding-plans', label: 'Onboarding Plans', roles: ['HR_ADMIN'] },
+  { to: '/analytics', label: 'Analytics', roles: ['HR_ADMIN'] },
 ]
 
 function Layout() {

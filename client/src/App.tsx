@@ -14,6 +14,7 @@ import ApproveTasks from './pages/ApproveTasks'
 import TeamFeedback from './pages/TeamFeedback'
 import UploadDocuments from './pages/UploadDocuments'
 import CreateOnboardingPlan from './pages/CreateOnboardingPlan'
+import Analytics from './pages/Analytics'
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path="/team-feedback" element={<TeamFeedback />} />
           <Route path="/upload-documents" element={<UploadDocuments />} />
           <Route path="/onboarding-plans" element={<CreateOnboardingPlan />} />
+          <Route path="/analytics" element={<Analytics />} />
         </Route>
       </Routes>
     </BrowserRouter>
