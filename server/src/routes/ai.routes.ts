@@ -217,8 +217,15 @@ router.post('/index-document/:id', authMiddleware, async (req: any, res) => {
     }
 
     const fileBuffer = fs.readFileSync(filePath)
-    const pdfData = await pdfParse(fileBuffer)
-    const chunks = chunkText(pdfData.text)
+    const parser = new PDFParse({ data: fileBuffer })
+    let text: string
+    try {
+      const pdfData = await parser.getText()
+      text = pdfData.text
+    } finally {
+      await parser.destroy()
+    }
+    const chunks = chunkText(text)
 
     if (chunks.length === 0) {
       return res.status(400).json({ message: 'No usable text found in this document' })
