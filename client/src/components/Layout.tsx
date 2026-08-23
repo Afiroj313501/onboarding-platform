@@ -22,6 +22,7 @@ const navConfig = [
   { to: '/onboarding-plans', label: 'Onboarding Plans', roles: ['HR_ADMIN'] },
   { to: '/analytics', label: 'Analytics', roles: ['HR_ADMIN'] },
   { to: '/chatbot', label: 'Assistant', roles: ['EMPLOYEE', 'MANAGER', 'HR_ADMIN'] },
+  { to: '/document-qa', label: 'Document Q&A', roles: ['EMPLOYEE', 'MANAGER', 'HR_ADMIN'] },
 ]
 
 function Layout() {

@@ -92,6 +92,8 @@ model Document {
   company   Company  @relation(fields: [companyId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  chunks    DocumentChunk[]
 }
 
 model Feedback {
@@ -101,4 +103,13 @@ model Feedback {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id])
+  content    String
+  embedding  Unsupported("vector(768)")?
+  createdAt  DateTime @default(now())
 }

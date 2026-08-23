@@ -13,6 +13,50 @@ interface DocumentsResponse {
   documents: Doc[]
 }
 
+function DocumentRow({ doc }: { doc: Doc }) {
+  const [indexStatus, setIndexStatus] = useState<'idle' | 'indexed'>('idle')
+
+  const indexDoc = useMutation({
+    mutationFn: () => api.post(`/ai/index-document/${doc.id}`).then((res) => res.data),
+    onSuccess: () => setIndexStatus('indexed'),
+  })
+
+  const isPdf = doc.fileUrl.toLowerCase().endsWith('.pdf')
+
+  return (
+    <div className="flex items-center justify-between bg-surface border border-border rounded-lg px-5 py-4 hover:border-brand-border hover:bg-brand-tint/40 transition-colors group">
+      <a
+        href={`http://localhost:5000${doc.fileUrl}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 min-w-0"
+      >
+        <h3 className="font-medium text-ink group-hover:text-brand">{doc.title}</h3>
+        <p className="text-muted text-xs mt-0.5">
+          Added {new Date(doc.createdAt).toLocaleDateString()}
+        </p>
+      </a>
+
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {isPdf && (
+          <button
+            onClick={() => indexDoc.mutate()}
+            disabled={indexDoc.isPending || indexStatus === 'indexed'}
+            className="text-xs font-medium text-brand hover:underline disabled:opacity-50"
+          >
+            {indexDoc.isPending
+              ? 'Indexing...'
+              : indexStatus === 'indexed'
+              ? 'Indexed ✓'
+              : 'Index for Q&A'}
+          </button>
+        )}
+        <span className="text-xs text-muted group-hover:text-brand font-medium">View</span>
+      </div>
+    </div>
+  )
+}
+
 function UploadDocuments() {
   const [title, setTitle] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -117,25 +161,7 @@ function UploadDocuments() {
         ) : (
           <div className="space-y-2">
             {data.documents.map((doc) => (
-              <a
-                key={doc.id}
-                href={`http://localhost:5000${doc.fileUrl}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between bg-surface border border-border rounded-lg px-5 py-4 hover:border-brand-border hover:bg-brand-tint/40 transition-colors group"
-              >
-                <div>
-                  <h3 className="font-medium text-ink group-hover:text-brand">
-                    {doc.title}
-                  </h3>
-                  <p className="text-muted text-xs mt-0.5">
-                    Added {new Date(doc.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <span className="text-xs text-muted group-hover:text-brand font-medium">
-                  View →
-                </span>
-              </a>
+              <DocumentRow key={doc.id} doc={doc} />
             ))}
           </div>
         )}

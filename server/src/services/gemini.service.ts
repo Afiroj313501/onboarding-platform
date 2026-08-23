@@ -13,3 +13,12 @@ export async function askGemini(prompt: string, systemContext?: string): Promise
   const response = result.response
   return response.text()
 }
+
+export async function embedText(text: string): Promise<number[]> {
+  const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' })
+  const result = await model.embedContent({
+    content: { role: 'user', parts: [{ text }] },
+    outputDimensionality: 768,
+  } as any)
+  return result.embedding.values
+}

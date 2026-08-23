@@ -5,6 +5,8 @@ import prisma from '../prisma/client'
 import fs from 'fs'
 import path from 'path'
 import { PDFParse } from 'pdf-parse'
+import { chunkText } from '../services/chunk.service'
+import { embedText } from '../services/gemini.service'
 const router = Router()
 
 function requireHrAdmin(req: any, res: any, next: any) {
@@ -181,6 +183,124 @@ ${text}`
   } catch (error) {
     console.error('Document summarization error:', error)
     res.status(500).json({ message: 'Failed to summarize document. Please try again.' })
+  }
+})
+
+// POST /api/ai/index-document/:id - chunk + embed a document for Q&A
+router.post('/index-document/:id', authMiddleware, async (req: any, res) => {
+  try {
+    const { id } = req.params
+    const userId = req.user.userId
+
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user?.companyId) {
+      return res.status(400).json({ message: 'You are not linked to a company yet' })
+    }
+
+    const document = await prisma.document.findUnique({ where: { id } })
+    if (!document || document.companyId !== user.companyId) {
+      return res.status(404).json({ message: 'Document not found' })
+    }
+
+    const existingChunks = await prisma.documentChunk.count({ where: { documentId: id } })
+    if (existingChunks > 0) {
+      return res.json({ message: 'Document already indexed', chunkCount: existingChunks })
+    }
+
+    if (!document.fileUrl.toLowerCase().endsWith('.pdf')) {
+      return res.status(400).json({ message: 'Only PDF documents can be indexed right now' })
+    }
+
+    const filePath = path.join(__dirname, '../../', document.fileUrl)
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File not found on server' })
+    }
+
+    const fileBuffer = fs.readFileSync(filePath)
+    const pdfData = await pdfParse(fileBuffer)
+    const chunks = chunkText(pdfData.text)
+
+    if (chunks.length === 0) {
+      return res.status(400).json({ message: 'No usable text found in this document' })
+    }
+
+    for (const chunk of chunks) {
+      const embedding = await embedText(chunk)
+      const vectorLiteral = `[${embedding.join(',')}]`
+
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "DocumentChunk" (id, "documentId", content, embedding, "createdAt")
+         VALUES (gen_random_uuid(), $1, $2, $3::vector, now())`,
+        id,
+        chunk,
+        vectorLiteral
+      )
+    }
+
+    res.json({ message: 'Document indexed', chunkCount: chunks.length })
+  } catch (error) {
+    console.error('Document indexing error:', error)
+    res.status(500).json({ message: 'Failed to index document. Please try again.' })
+  }
+})
+
+// POST /api/ai/ask-documents - RAG Q&A across all indexed company documents
+router.post('/ask-documents', authMiddleware, async (req: any, res) => {
+  try {
+    const { question } = req.body
+    const userId = req.user.userId
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({ message: 'Question is required' })
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user?.companyId) {
+      return res.status(400).json({ message: 'You are not linked to a company yet' })
+    }
+
+    const questionEmbedding = await embedText(question)
+    const vectorLiteral = `[${questionEmbedding.join(',')}]`
+
+    // Find the most similar chunks across documents belonging to this company
+    const results: any[] = await prisma.$queryRawUnsafe(
+      `SELECT dc.content, dc."documentId", d.title,
+              1 - (dc.embedding <=> $1::vector) AS similarity
+       FROM "DocumentChunk" dc
+       JOIN "Document" d ON dc."documentId" = d.id
+       WHERE d."companyId" = $2
+       ORDER BY dc.embedding <=> $1::vector
+       LIMIT 5`,
+      vectorLiteral,
+      user.companyId
+    )
+
+    if (results.length === 0) {
+      return res.json({
+        answer: "I don't have any indexed documents to search yet. Ask HR Admin to index some documents first.",
+        sources: [],
+      })
+    }
+
+    const context = results
+      .map((r, i) => `[Source: ${r.title}]\n${r.content}`)
+      .join('\n\n---\n\n')
+
+    const prompt = `Answer the employee's question using ONLY the context below from company documents. If the answer isn't in the context, say you don't have that information and suggest checking with HR.
+
+Context:
+${context}
+
+Question: ${question}`
+
+    const answer = await askGemini(prompt)
+
+    const sources = [...new Set(results.map((r) => r.title))]
+
+    res.json({ answer, sources })
+  } catch (error) {
+    console.error('Document Q&A error:', error)
+    res.status(500).json({ message: 'Failed to answer question. Please try again.' })
   }
 })
 

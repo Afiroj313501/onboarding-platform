@@ -16,6 +16,7 @@ import UploadDocuments from './pages/UploadDocuments'
 import CreateOnboardingPlan from './pages/CreateOnboardingPlan'
 import Analytics from './pages/Analytics'
 import Chatbot from './pages/Chatbot'
+import DocumentQA from './pages/DocumentQA'
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="/onboarding-plans" element={<CreateOnboardingPlan />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/chatbot" element={<Chatbot />} />
+          <Route path="/document-qa" element={<DocumentQA />} />
         </Route>
       </Routes>
     </BrowserRouter>
