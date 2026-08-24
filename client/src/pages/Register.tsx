@@ -18,6 +18,18 @@ function Register({ onSuccess, onSwitchToLogin }: RegisterProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -81,8 +93,10 @@ function Register({ onSuccess, onSwitchToLogin }: RegisterProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border border-border rounded-md p-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-border"
+            minLength={8}
             required
           />
+          <p className="text-xs text-muted mt-1">At least 8 characters</p>
         </div>
 
         <button

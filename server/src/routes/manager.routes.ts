@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import prisma from '../prisma/client'
 import { authMiddleware } from '../middleware/auth.middleware'
+import { sendEmail, extensionResponseEmail, revisionRequestedEmail } from '../services/email.service'
 
 const router = Router()
 
@@ -119,7 +120,7 @@ router.patch('/tasks/:id/revision', authMiddleware, requireManager, async (req: 
 
     const task = await prisma.task.findUnique({
       where: { id },
-      include: { employee: true },
+      include: { employee: { include: { user: true } } },
     })
 
     if (!task || task.employee.companyId !== manager?.companyId) {
@@ -130,6 +131,9 @@ router.patch('/tasks/:id/revision', authMiddleware, requireManager, async (req: 
       where: { id },
       data: { needsRevision: true, revisionNote: note },
     })
+
+    const { subject, html } = revisionRequestedEmail(task.employee.user.name, task.title, note)
+    sendEmail(task.employee.user.email, subject, html)
 
     res.json({ message: 'Revision requested', task: updated })
   } catch (error) {
@@ -189,12 +193,12 @@ router.get('/extension-requests', authMiddleware, requireManager, async (req: an
 router.patch('/tasks/:id/extension', authMiddleware, requireManager, async (req: any, res) => {
   try {
     const { id } = req.params
-    const { approve } = req.body // true or false
+    const { approve } = req.body
     const manager = await prisma.user.findUnique({ where: { id: req.user.userId } })
 
     const task = await prisma.task.findUnique({
       where: { id },
-      include: { employee: true },
+      include: { employee: { include: { user: true } } },
     })
 
     if (!task || task.employee.companyId !== manager?.companyId) {
@@ -208,6 +212,9 @@ router.patch('/tasks/:id/extension', authMiddleware, requireManager, async (req:
         dueDate: approve && task.requestedDueDate ? task.requestedDueDate : task.dueDate,
       },
     })
+
+    const { subject, html } = extensionResponseEmail(task.employee.user.name, task.title, approve)
+    sendEmail(task.employee.user.email, subject, html)
 
     res.json({ message: approve ? 'Extension approved' : 'Extension rejected', task: updated })
   } catch (error) {

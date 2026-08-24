@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import prisma from '../prisma/client'
 import { authMiddleware } from '../middleware/auth.middleware'
+import { sendEmail, taskAssignedEmail } from '../services/email.service'
 
 const router = Router()
 
@@ -209,6 +210,51 @@ router.get('/analytics', authMiddleware, requireHrAdmin, async (req: any, res) =
       feedbackCount,
       avgRating: avgRatingResult._avg.rating ? Math.round(avgRatingResult._avg.rating * 10) / 10 : null,
     })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+
+router.post('/:employeeId/tasks', authMiddleware, requireHrAdmin, async (req: any, res) => {
+  try {
+    const { employeeId } = req.params
+    const { tasks } = req.body
+
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      return res.status(400).json({ message: 'At least one task is required' })
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+      include: { user: true },
+    })
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' })
+    }
+
+    const created = await prisma.task.createMany({
+      data: tasks.map((t: any) => ({
+        title: t.title,
+        description: t.description || null,
+        priority: t.priority || 'medium',
+        dueDate: t.dueDate ? new Date(t.dueDate) : null,
+        employeeId,
+      })),
+    })
+
+    // Send an email for each new task (fire-and-forget, doesn't block the response)
+    tasks.forEach((t: any) => {
+      const { subject, html } = taskAssignedEmail(
+        employee.user.name,
+        t.title,
+        t.dueDate ? new Date(t.dueDate).toLocaleDateString() : null
+      )
+      sendEmail(employee.user.email, subject, html)
+    })
+
+    res.status(201).json({ message: `${created.count} tasks created` })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Server error' })
