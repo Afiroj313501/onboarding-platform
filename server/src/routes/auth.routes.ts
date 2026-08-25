@@ -91,9 +91,9 @@ router.post('/login', async (req, res) => {
     // Set the token as an httpOnly cookie instead of sending it in JSON
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false, // set to true once you're on HTTPS in production
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days, matches the JWT expiry
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     })
 
     res.json({
