@@ -27,7 +27,7 @@ function DocumentCard({ doc }: { doc: Doc }) {
     <div className="bg-surface border border-border rounded-lg overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 hover:bg-brand-tint/40 transition-colors group">
         <a
-          href={`http://localhost:5000${doc.fileUrl}`}
+         href={doc.fileUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 min-w-0"
@@ -51,7 +51,7 @@ function DocumentCard({ doc }: { doc: Doc }) {
             </button>
           )}
           <a
-            href={`http://localhost:5000${doc.fileUrl}`}
+            href={doc.fileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-muted group-hover:text-brand font-medium"

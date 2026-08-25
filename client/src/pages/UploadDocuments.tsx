@@ -26,7 +26,7 @@ function DocumentRow({ doc }: { doc: Doc }) {
   return (
     <div className="flex items-center justify-between bg-surface border border-border rounded-lg px-5 py-4 hover:border-brand-border hover:bg-brand-tint/40 transition-colors group">
       <a
-        href={`http://localhost:5000${doc.fileUrl}`}
+        href={doc.fileUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="flex-1 min-w-0"

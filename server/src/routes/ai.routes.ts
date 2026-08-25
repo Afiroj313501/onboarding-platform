@@ -147,13 +147,12 @@ router.post('/summarize-document/:id', authMiddleware, async (req: any, res) => 
       return res.status(400).json({ message: 'Only PDF documents can be summarized right now' })
     }
 
-    const filePath = path.join(__dirname, '../../', document.fileUrl)
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'File not found on server' })
-    }
-
-    const fileBuffer = fs.readFileSync(filePath)
+    const response = await fetch(document.fileUrl)
+    if (!response.ok) {
+      return res.status(404).json({ message: 'File not found' })
+    } 
+    const arrayBuffer = await response.arrayBuffer()
+    const fileBuffer = Buffer.from(arrayBuffer)
     const parser = new PDFParse({ data: fileBuffer })
     let text: string
     try {
@@ -211,12 +210,12 @@ router.post('/index-document/:id', authMiddleware, async (req: any, res) => {
       return res.status(400).json({ message: 'Only PDF documents can be indexed right now' })
     }
 
-    const filePath = path.join(__dirname, '../../', document.fileUrl)
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'File not found on server' })
+    const response = await fetch(document.fileUrl)
+    if (!response.ok) {
+      return res.status(404).json({ message: 'File not found' })
     }
-
-    const fileBuffer = fs.readFileSync(filePath)
+    const arrayBuffer = await response.arrayBuffer()
+    const fileBuffer = Buffer.from(arrayBuffer)
     const parser = new PDFParse({ data: fileBuffer })
     let text: string
     try {
